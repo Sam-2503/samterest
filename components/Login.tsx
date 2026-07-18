@@ -1,4 +1,8 @@
+"use client";
 import { Button } from "@/components/ui/button";
+import { supabase } from "@/lib/supabase/client";
+import { useState } from "react";
+
 import {
 	Field,
 	FieldDescription,
@@ -20,20 +24,38 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 
 export default function Login() {
+	const [email, setEmail] = useState("");
+	const [password, setPassword] = useState("");
+
+	async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+		e.preventDefault();
+		const { data, error } = await supabase.auth.signInWithPassword({
+			email: email,
+			password: password,
+		});
+		if (error) {
+			console.error(error);
+			return;
+		}
+	}
+
 	return (
 		<div className="w-full max-w-md">
-			<form>
+			<form onSubmit={handleSubmit}>
 				<FieldGroup>
 					<FieldSet>
 						<FieldLegend>Prove your worth 😋</FieldLegend>
 						<FieldGroup>
 							<Field>
-								<FieldLabel htmlFor="name-input">
-									Name
+								<FieldLabel htmlFor="email-input">
+									Email
 								</FieldLabel>
 								<Input
-									id="name-input"
-									placeholder="Narendra Modi"
+									id="email-input"
+									name="email"
+									value={email}
+									onChange={(e) => setEmail(e.target.value)}
+									placeholder="narendra.modi@bjp.tmkc"
 									required
 								/>
 							</Field>
@@ -43,6 +65,11 @@ export default function Login() {
 								</FieldLabel>
 								<Input
 									id="password-input"
+									name="password"
+									value={password}
+									onChange={(e) =>
+										setPassword(e.target.value)
+									}
 									placeholder="••••••••"
 									required
 								/>
@@ -51,9 +78,6 @@ export default function Login() {
 
 						<Field orientation="horizontal">
 							<Button type="submit">Submit</Button>
-							<Button variant="outline" type="button">
-								Cancel
-							</Button>
 						</Field>
 					</FieldSet>
 				</FieldGroup>
