@@ -1,5 +1,7 @@
+"use client";
 import { FileCodeIcon, XIcon } from "lucide-react";
-
+import { useState, useEffect } from "react";
+import Image from "next/image";
 import {
 	Attachment,
 	AttachmentAction,
@@ -11,7 +13,13 @@ import {
 	AttachmentTitle,
 } from "@/components/ui/attachment";
 import { Spinner } from "@/components/ui/spinner";
+import { supabase } from "@/lib/supabase/client";
 
+type Image = {
+	src: string;
+};
+
+/*
 const images = [
 	{
 		name: "workspace.png",
@@ -32,57 +40,44 @@ const images = [
 		alt: "Office",
 	},
 ];
+*/
 
-export default function AttachmentDemo() {
+export default function ImageGrid() {
+	const [images, setImages] = useState<Image[]>([]);
+
+	async function getImages() {
+		const { data, error } = await supabase.from("filepath").select();
+		if (error) {
+			// Logs the full error: message, code, details, and hint.
+			console.error(error);
+			return;
+		}
+
+		const images = data.map((item) => {
+			const publicUrl = supabase.storage
+				.from("photos")
+				.getPublicUrl(`${item.file_path}`).data.publicUrl;
+			return {
+				src: publicUrl,
+			};
+		});
+		setImages(images);
+	}
+
+	useEffect(() => {
+		getImages();
+	}, []);
+
 	return (
-		<div className="mx-auto flex w-full max-w-sm flex-col gap-3 py-12">
-			<AttachmentGroup>
-				{images.map((image) => (
-					<Attachment key={image.name} orientation="vertical">
-						<AttachmentMedia variant="image">
-							<img src={image.src} alt={image.alt} />
-						</AttachmentMedia>
-						<AttachmentContent>
-							<AttachmentTitle>{image.name}</AttachmentTitle>
-							<AttachmentDescription>
-								{image.meta}
-							</AttachmentDescription>
-						</AttachmentContent>
-					</Attachment>
-				))}
-			</AttachmentGroup>
-			<Attachment state="uploading" className="w-full">
-				<AttachmentMedia>
-					<Spinner />
-				</AttachmentMedia>
-				<AttachmentContent>
-					<AttachmentTitle>sales-dashboard.pdf</AttachmentTitle>
-					<AttachmentDescription>
-						Uploading · 64%
-					</AttachmentDescription>
-				</AttachmentContent>
-				<AttachmentActions>
-					<AttachmentAction aria-label="Cancel upload">
-						<XIcon />
-					</AttachmentAction>
-				</AttachmentActions>
-			</Attachment>
-			<Attachment className="w-full">
-				<AttachmentMedia>
-					<FileCodeIcon />
-				</AttachmentMedia>
-				<AttachmentContent>
-					<AttachmentTitle>message-renderer.tsx</AttachmentTitle>
-					<AttachmentDescription>
-						TypeScript · 12 KB
-					</AttachmentDescription>
-				</AttachmentContent>
-				<AttachmentActions>
-					<AttachmentAction aria-label="Remove message-renderer.tsx">
-						<XIcon />
-					</AttachmentAction>
-				</AttachmentActions>
-			</Attachment>
+		<div className="grid grid-cols-5 gap-2 w-full h-full py-12">
+			{images.map((image) => (
+				<img
+					key={image.src}
+					src={image.src}
+					alt="image"
+					className="rounded-md border border-slate-200 object-cover w-full h-auto"
+				/>
+			))}
 		</div>
 	);
 }

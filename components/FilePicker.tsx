@@ -1,5 +1,5 @@
 "use client";
-
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import {
 	Dialog,
@@ -20,6 +20,15 @@ import { useState } from "react";
 
 export default function DialogDemo() {
 	const [file, setFile] = useState<File | null>(null);
+	const router = useRouter();
+	const [uploading, setUploading] = useState(false);
+
+	async function insertIntoDatabase(filePath: string) {
+		const { error } = await supabase
+			.from("filepath")
+			.insert({ file_path: `${filePath}` });
+		if (error) console.error(error);
+	}
 
 	async function uploadFile(e: any) {
 		const {
@@ -32,25 +41,33 @@ export default function DialogDemo() {
 		if (!file) {
 			return;
 		}
-		console.log("Uploading file:", file);
-		const id = crypto.randomUUID();
-		const fileExt = file.name.split(".").pop();
-		const fileName = `${id}.${fileExt}`;
-		const filePath = `private/${fileName}`;
-		const { data, error } = await supabase.storage
-			.from("photos")
-			.upload(filePath, file);
-		console.log(data);
-		if (error) {
+		setUploading(true);
+		try {
+			console.log("Uploading file:", file);
+			const id = crypto.randomUUID();
+			const fileExt = file.name.split(".").pop();
+			const fileName = `${id}.${fileExt}`;
+			const filePath = `private/${fileName}`;
+			const { data, error } = await supabase.storage
+				.from("photos")
+				.upload(filePath, file);
+			await insertIntoDatabase(filePath);
+			console.log(data);
+		} catch (error) {
 			console.error("Error uploading file:", error);
+		} finally {
+			setUploading(false);
+			window.location.reload();
 		}
 	}
+
 	return (
 		<Dialog>
 			<DialogTrigger
 				render={
 					<Button>
 						<Plus />
+						Upload new Image
 					</Button>
 				}
 			/>
@@ -78,7 +95,7 @@ export default function DialogDemo() {
 
 					<DialogFooter>
 						<Button type="button" onClick={uploadFile}>
-							Save changes
+							Upload
 						</Button>
 					</DialogFooter>
 				</form>
