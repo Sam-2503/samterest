@@ -102,11 +102,13 @@ export default function DialogDemo({
 							id="picture"
 							type="file"
 							name="picture"
-							onChange={(e) => setFile(e.target.files[0])}
+							onChange={(e) =>
+								setFile(e.target.files?.[0] ?? null)
+							}
 						/>
 					</Field>
 
-					<DialogClose asChild>
+					<DialogClose>
 						<DialogFooter>
 							<Button
 								type="button"

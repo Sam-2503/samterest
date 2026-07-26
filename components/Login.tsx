@@ -1,7 +1,7 @@
 "use client";
+
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import Link from "next/link";
 import { supabase } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,54 +11,44 @@ export default function Login() {
 	const [email, setEmail] = useState("");
 	const [password, setPassword] = useState("");
 	const [loading, setLoading] = useState(false);
+
 	const router = useRouter();
 
 	async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
 		e.preventDefault();
-		console.log("Submit button Clicked");
 		setLoading(true);
 
-		const { data, error } = await supabase.auth.signInWithPassword({
+		const { error } = await supabase.auth.signInWithPassword({
 			email,
 			password,
 		});
-
-		console.log("Login:", data, error);
-
-		const {
-			data: { session },
-		} = await supabase.auth.getSession();
-
-		console.log("Session after login:", session);
 
 		if (error) {
 			console.error(error);
 			setLoading(false);
 			return;
 		}
-		console.log("After Signing In");
-		console.log("Login successful", data);
-		console.log(error);
-		console.log("Redirecting to dashboard...");
+
 		router.replace("/dashboard");
-		console.log("This should never print");
-		setLoading(false);
 	}
 
 	return (
-		<div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-neutral-100 via-white to-red-50 px-4">
-			<div className="w-full max-w-md rounded-3xl border border-neutral-200 bg-white p-10 shadow-xl">
-				<div className="mb-10 text-center">
-					<h1 className="text-3xl font-bold tracking-tight">
+		<div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-neutral-100 via-white to-red-50 px-4 py-8">
+			<div className="w-full max-w-md rounded-2xl border border-neutral-200 bg-white p-6 shadow-xl sm:rounded-3xl sm:p-8 lg:p-10">
+				<div className="mb-8 text-center sm:mb-10">
+					<h1 className="text-3xl font-bold tracking-tight sm:text-4xl">
 						Samterest
 					</h1>
 
-					<p className="mt-2 text-neutral-500">
-						Welcome back! Sign in hehe.
+					<p className="mt-2 text-sm text-neutral-500 sm:text-base">
+						Welcome back! Sign in to continue.
 					</p>
 				</div>
 
-				<form onSubmit={handleSubmit} className="space-y-6">
+				<form
+					onSubmit={handleSubmit}
+					className="space-y-5 sm:space-y-6"
+				>
 					<FieldGroup>
 						<Field>
 							<FieldLabel htmlFor="email">Email</FieldLabel>
@@ -69,7 +59,7 @@ export default function Login() {
 								value={email}
 								onChange={(e) => setEmail(e.target.value)}
 								placeholder="you@example.com"
-								className="mt-2 h-12 rounded-xl"
+								className="mt-2 h-11 rounded-xl sm:h-12"
 								required
 							/>
 						</Field>
@@ -83,7 +73,7 @@ export default function Login() {
 								value={password}
 								onChange={(e) => setPassword(e.target.value)}
 								placeholder="••••••••"
-								className="mt-2 h-12 rounded-xl"
+								className="mt-2 h-11 rounded-xl sm:h-12"
 								required
 							/>
 						</Field>
@@ -92,7 +82,7 @@ export default function Login() {
 					<Button
 						type="submit"
 						disabled={loading}
-						className="h-12 w-full rounded-xl bg-red-600 text-base hover:bg-red-700"
+						className="h-11 w-full rounded-xl bg-red-600 text-sm font-medium hover:bg-red-700 sm:h-12 sm:text-base"
 					>
 						{loading ? "Logging in..." : "Log In"}
 					</Button>
