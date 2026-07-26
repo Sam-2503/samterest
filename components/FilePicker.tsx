@@ -34,13 +34,15 @@ export default function DialogDemo({
 	}
 
 	async function uploadFile(e: any) {
+		e.preventDefault();
+
 		const {
 			data: { user },
 		} = await supabase.auth.getUser();
-
 		console.log(user);
 
-		e.preventDefault();
+		if (uploading) return;
+
 		if (!file) {
 			return;
 		}
@@ -54,6 +56,10 @@ export default function DialogDemo({
 			const { data, error } = await supabase.storage
 				.from("photos")
 				.upload(filePath, file);
+			if (error) {
+				console.error(error);
+				throw error;
+			}
 			await insertIntoDatabase(filePath);
 			onUploadSuccess();
 			console.log(data);
