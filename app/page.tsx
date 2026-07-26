@@ -1,9 +1,10 @@
-import Login from "@/components/Login";
-
-export default async function Home() {
+import { redirect } from "next/navigation";
+export function Home() {
+	redirect("/dashboard");
 	return (
-		<>
-			<Login />
-		</>
+		<div>
+			<h1>Welcome to Samterest</h1>
+		</div>
 	);
 }
+export default Home;

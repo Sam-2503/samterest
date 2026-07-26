@@ -1,5 +1,5 @@
 "use client";
-import { useRouter } from "next/navigation";
+
 import { Button } from "@/components/ui/button";
 import {
 	Dialog,
@@ -18,9 +18,12 @@ import { Plus } from "lucide-react";
 import { supabase } from "@/lib/supabase/client";
 import { useState } from "react";
 
-export default function DialogDemo() {
+export default function DialogDemo({
+	onUploadSuccess,
+}: {
+	onUploadSuccess: () => void;
+}) {
 	const [file, setFile] = useState<File | null>(null);
-	const router = useRouter();
 	const [uploading, setUploading] = useState(false);
 
 	async function insertIntoDatabase(filePath: string) {
@@ -52,12 +55,12 @@ export default function DialogDemo() {
 				.from("photos")
 				.upload(filePath, file);
 			await insertIntoDatabase(filePath);
+			onUploadSuccess();
 			console.log(data);
 		} catch (error) {
 			console.error("Error uploading file:", error);
 		} finally {
 			setUploading(false);
-			window.location.reload();
 		}
 	}
 
@@ -65,9 +68,23 @@ export default function DialogDemo() {
 		<Dialog>
 			<DialogTrigger
 				render={
-					<Button>
-						<Plus />
-						Upload new Image
+					<Button
+						type="button"
+						onClick={uploadFile}
+						disabled={uploading}
+						className="px-2 rounded-full bg-red-600 hover:bg-red-700"
+					>
+						{uploading ? (
+							<>
+								<div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+								Uploading...
+							</>
+						) : (
+							<>
+								<Plus className="mr-2 h-4 w-4" />
+								Upload
+							</>
+						)}
 					</Button>
 				}
 			/>
@@ -75,29 +92,31 @@ export default function DialogDemo() {
 				<form>
 					<DialogHeader>
 						<DialogTitle>Upload a new image</DialogTitle>
-						<DialogDescription>
-							Add a new picture to the Samterest grid
+						<DialogDescription className="mb-2">
+							Select a picture to upload to the Samterest grid
 						</DialogDescription>
 					</DialogHeader>
 
 					<Field>
-						<FieldLabel htmlFor="picture">Picture</FieldLabel>
 						<Input
 							id="picture"
 							type="file"
 							name="picture"
 							onChange={(e) => setFile(e.target.files[0])}
 						/>
-						<FieldDescription>
-							Select a picture to upload.
-						</FieldDescription>
 					</Field>
 
-					<DialogFooter>
-						<Button type="button" onClick={uploadFile}>
-							Upload
-						</Button>
-					</DialogFooter>
+					<DialogClose asChild>
+						<DialogFooter>
+							<Button
+								type="button"
+								onClick={uploadFile}
+								className="mt-1 bg-red-600 hover:bg-red-700"
+							>
+								Upload
+							</Button>
+						</DialogFooter>
+					</DialogClose>
 				</form>
 			</DialogContent>
 		</Dialog>
