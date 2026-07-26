@@ -76,7 +76,6 @@ export default function DialogDemo({
 				render={
 					<Button
 						type="button"
-						onClick={uploadFile}
 						disabled={uploading}
 						className="px-2 rounded-full bg-red-600 hover:bg-red-700"
 					>
