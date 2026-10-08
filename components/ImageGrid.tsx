@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase/client";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 
 type Image = {
 	id: string | number;
@@ -13,6 +14,7 @@ export default function ImageGrid({ refreshKey }: { refreshKey: number }) {
 	const [failedImageIds, setFailedImageIds] = useState<Set<Image["id"]>>(
 		new Set(),
 	);
+	const [selectedImage, setSelectedImage] = useState<Image | null>(null);
 	const [loading, setLoading] = useState(true);
 
 	async function getImages() {
@@ -52,11 +54,10 @@ export default function ImageGrid({ refreshKey }: { refreshKey: number }) {
 		);
 
 		setImages(
-			signedImages.filter(
-				(image): image is Image => image !== null,
-			),
+			signedImages.filter((image): image is Image => image !== null),
 		);
 		setFailedImageIds(new Set());
+		setSelectedImage(null);
 		setLoading(false);
 	}
 
@@ -101,32 +102,66 @@ export default function ImageGrid({ refreshKey }: { refreshKey: number }) {
 	}
 
 	return (
-		<div className="columns-2 gap-3 sm:gap-4 md:columns-3 lg:columns-4 xl:columns-5 2xl:columns-6">
-			{visibleImages.map((image) => (
-				<div
-					key={image.id}
-					className="group relative mb-3 break-inside-avoid overflow-hidden rounded-xl bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl sm:mb-4 sm:rounded-2xl lg:mb-5 lg:rounded-3xl"
-				>
-					<img
-						src={image.src}
-						alt=""
-						loading="lazy"
-						onError={() => {
-							console.error(
-								`Unable to load image ${image.src}; removing it from the grid.`,
-							);
-							setFailedImageIds((failedIds) => {
-								const nextFailedIds = new Set(failedIds);
-								nextFailedIds.add(image.id);
-								return nextFailedIds;
-							});
+		<>
+			<div className="columns-2 gap-3 sm:gap-4 md:columns-3 lg:columns-4 xl:columns-5 2xl:columns-6">
+				{visibleImages.map((image) => (
+					<div
+						key={image.id}
+						role="button"
+						tabIndex={0}
+						aria-label="Open image"
+						onClick={() => setSelectedImage(image)}
+						onKeyDown={(event) => {
+							if (event.key === "Enter" || event.key === " ") {
+								event.preventDefault();
+								setSelectedImage(image);
+							}
 						}}
-						className="block w-full rounded-xl transition-transform duration-500 group-hover:scale-105 sm:rounded-2xl lg:rounded-3xl"
-					/>
+						className="group relative mb-3 cursor-zoom-in break-inside-avoid overflow-hidden rounded-xl bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl focus-visible:ring-2 focus-visible:ring-red-600 focus-visible:outline-none sm:mb-4 sm:rounded-2xl lg:mb-5 lg:rounded-3xl"
+					>
+						<img
+							src={image.src}
+							alt=""
+							loading="lazy"
+							onError={() => {
+								console.error(
+									`Unable to load image ${image.src}; removing it from the grid.`,
+								);
+								setFailedImageIds((failedIds) => {
+									const nextFailedIds = new Set(failedIds);
+									nextFailedIds.add(image.id);
+									return nextFailedIds;
+								});
+								setSelectedImage((currentImage) =>
+									currentImage?.id === image.id
+										? null
+										: currentImage,
+								);
+							}}
+							className="block w-full rounded-xl transition-transform duration-500 group-hover:scale-105 sm:rounded-2xl lg:rounded-3xl"
+						/>
 
-					<div className="absolute inset-0 rounded-xl bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100 sm:rounded-2xl lg:rounded-3xl" />
-				</div>
-			))}
-		</div>
+						<div className="absolute inset-0 rounded-xl bg-linear-to-t from-black/50 via-transparent to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100 sm:rounded-2xl lg:rounded-3xl" />
+					</div>
+				))}
+			</div>
+
+			<Dialog
+				open={selectedImage !== null}
+				onOpenChange={(open) => {
+					if (!open) setSelectedImage(null);
+				}}
+			>
+				<DialogContent className="w-auto max-w-[calc(100%-3rem)] border-0 bg-black/90 p-1 sm:max-w-[min(80vw,900px)]">
+					{selectedImage && (
+						<img
+							src={selectedImage.src}
+							alt="Expanded view"
+							className="max-h-[80vh] max-w-full rounded-lg object-contain"
+						/>
+					)}
+				</DialogContent>
+			</Dialog>
+		</>
 	);
 }
